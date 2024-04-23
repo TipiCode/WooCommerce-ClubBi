@@ -10,7 +10,8 @@
 
 class ClubBi {
     public $branch;
-    public $establishment;
+    public $user;
+    public $password;
     private static $instance;
 
     /**
@@ -22,7 +23,8 @@ class ClubBi {
         //Llena las opciones guardadas dentro del plugin 
         $options = get_option( 'club_bi_options' );
         $this->branch = $options['branch']; //Surcursal
-        $this->establishment = $options['estabishment']; //Establecimiento
+        $this->user = $options['user']; //Usuario
+        $this->password = $options['password']; //Usuario
     }
 
     /**
@@ -51,7 +53,7 @@ class ClubBi {
         if(is_admin()){
             add_action('admin_menu', array($this, 'init_settings_page'));
             add_action( 'woocommerce_coupon_options', array($this, 'init_coupon_fields') );
-            add_action( 'woocommerce_coupon_options_save', array($this, 'save_coupon_fields') );
+            add_action( 'woocommerce_coupon_options_save', array($this, 'save_coupon_fields'),  10, 2 );
             add_action( 'admin_init', array($this, 'register_settings') );
         }
         add_action( 'woocommerce_review_order_before_payment', array($this, 'init_checkout') );
@@ -153,6 +155,36 @@ class ClubBi {
     * @since 1.0.0
     */ 
     public function process_card(){
-        error_log('Esta entrando al form');
+        $card = $_POST['cbi_card'];
+
+        if($card === ''){
+            wc_add_notice("Ops! Tu tarjeta Club Bi es invalida, porfavor ingresala correctamente.", "error");
+            wc_print_notices();
+        }
+
+        $coupon_posts = get_posts(array(
+            'posts_per_page'   => -1,
+            'post_type'        => 'shop_coupon',
+            'post_status'      => 'publish',      
+            'meta_query' => array(
+               // meta query takes an array of arrays, watch out for this!
+               array(
+                  'key'     => 'benefit_code'
+               )
+            )
+        ));
+
+        global $woocommerce;
+        foreach ( $coupon_posts as $coupon_post ) {
+            $benefit_code = get_post_meta($coupon_post->ID, 'benefit_code', true );
+            $coupon = new WC_Coupon($coupon_post->post_title);
+            if($coupon->is_valid()){
+                WC()->cart->apply_coupon( $coupon->code );
+            }
+        }
+        
+        
+
+        wp_die();
     }
 }

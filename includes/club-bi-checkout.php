@@ -68,7 +68,7 @@ class ClubBiCheckout{
             <h1>¿Cuentas con tarjeta <span>Club BI</span>?</h1>
             <p class='form-row form-row-wide'>
                 <label>Número de Tarjeta</label>
-                <input type='text' placeholder='0508-5321-8877-1231' class='main_input'></input>
+                <input id='cbi_card' type='text' placeholder='0508-5321-8877-1231' class='main_input'></input>
             </p>
             <div class='button_row'>
                 <button type='button' class='validate'>

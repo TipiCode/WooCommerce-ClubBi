@@ -39,7 +39,8 @@ class ClubBiSettings{
         add_settings_section( 'service_settings', '', array($this, 'service_settings_section_text'), 'club_bi' );
 
         add_settings_field( 'club_bi_branch', 'Código de Sucursal', array($this, 'club_bi_settings_branch'), 'club_bi', 'service_settings' );
-        add_settings_field( 'club_bi_estabishment', 'Código de establecimiento', array($this, 'club_bi_settings_establishment'), 'club_bi', 'service_settings' );
+        add_settings_field( 'club_bi_user', 'Usuario', array($this, 'club_bi_settings_user'), 'club_bi', 'service_settings' );
+        add_settings_field( 'club_bi_password', 'Usuario', array($this, 'club_bi_settings_password'), 'club_bi', 'service_settings' );
     }
 
     /**
@@ -78,14 +79,26 @@ class ClubBiSettings{
     }
 
     /**
-    * Registra el campo de Código de establecimiento
+    * Registra el campo de usuario
     * 
     * @author Luis E. Mendoza <lmendoza@codingtipi.com>
     * @link https://codingtipi.com/project/recurrente
     * @since 1.0.0
     */
-    public function club_bi_settings_establishment() {
+    public function club_bi_settings_user() {
         $options = get_option( 'club_bi_options' );
-        echo "<input id='club_bi_branch' name='club_bi_options[estabishment]' type='text' value='" . esc_attr( $options['estabishment'] ?? '' ) . "' />";
+        echo "<input id='club_bi_user' name='club_bi_options[user]' type='text' value='" . esc_attr( $options['user'] ?? '' ) . "' />";
+    }
+
+    /**
+    * Registra el campo de password
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @link https://codingtipi.com/project/recurrente
+    * @since 1.0.0
+    */
+    public function club_bi_settings_password() {
+        $options = get_option( 'club_bi_options' );
+        echo "<input id='club_bi_password' name='club_bi_options[password]' type='password' value='" . esc_attr( $options['password'] ?? '' ) . "' />";
     }
 }
