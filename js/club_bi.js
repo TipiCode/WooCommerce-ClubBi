@@ -9,10 +9,14 @@ jQuery(document).ready(function () {
         data: { action: "club_bi_redeem",
         cbi_card: jQuery('#cbi_card').val() },
         success: function (response) {
+          console.log('Success');
+          console.log(response);
           jQuery(document.body).trigger("update_checkout");
         },
         error: function(error) {
-          jQuery('.woocommerce-notices-wrapper').first().empty().append(error.responseText);
+          console.log('Error');
+          console.log(error);
+          jQuery('.woocommerce-notices-wrapper').first().empty().append('<ul class="woocommerce-error" role="alert"><li>' + error.responseText + '</li></ul>');
         }
       });
     });

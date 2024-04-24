@@ -66,3 +66,6 @@ function club_bi_script_enqueuer() {
     wp_enqueue_script( 'club_bi' );
 }
 add_action( 'init', 'club_bi_script_enqueuer' );
+
+
+

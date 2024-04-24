@@ -58,6 +58,7 @@ class ClubBi {
         }
         add_action( 'woocommerce_review_order_before_payment', array($this, 'init_checkout') );
         add_action('wp_ajax_club_bi_redeem', array($this, 'process_card') );
+        add_action('wp_ajax_nopriv_club_bi_redeem', array($this, 'process_card') );
     }
 
     /**
@@ -158,10 +159,76 @@ class ClubBi {
         $card = $_POST['cbi_card'];
 
         if($card === ''){
-            wc_add_notice("Ops! Tu tarjeta Club Bi es invalida, porfavor ingresala correctamente.", "error");
-            wc_print_notices();
-        }
+            echo $this->invalid_card();
+        }else{
+            $coupon_keys = $this->validate_discount();
+            if($coupon_keys['coupon'] != 0){
+                include_once dirname(__FILE__) . '/../utils/curl.php';
+                include_once 'discount.php';
+                WC()->cart->apply_coupon( $coupon_keys['coupon'] );
 
+                global $woocommerce;
+                $subtotal = WC()->cart->subtotal;
+                $currency = 'GTQ';
+                $discount = WC()->cart->get_coupon_discount_amount( $coupon_keys['coupon'] );
+
+                $discount = new Discount($card, $coupon_keys['benefit'], $subtotal, $currency, $discount); //Inicia un descuento
+                $discount_transaction = $discount->validate(); 
+
+                if ( is_wp_error( $discount_transaction ) ){
+                    WC()->cart->remove_coupon( $coupon_keys['coupon'] );
+                    wc_clear_notices();
+                    echo $discount_transaction;
+                }else{
+                    if ( $discount->code != 200 ){
+                        WC()->cart->remove_coupon( $coupon_keys['coupon'] );
+                        wc_clear_notices();
+                        echo $discount_transaction;
+                    } else{
+                        return $coupon_keys;
+                    }
+                } //Valida por error en la llamada del API
+                    
+            }else{
+                echo invalid_coupon();
+            }
+        }
+        
+        wp_die();
+    }
+
+    /**
+    * Función para alertar al usuario sobre su tarjeta invalida de Club BI
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */ 
+    private function invalid_card(){
+        return "Ops! Tu tarjeta Club Bi es invalida, porfavor ingresala correctamente.";
+    }
+
+    /**
+    * Función para alertar al usuario sobre beneficio no valido
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */ 
+    private function invalid_coupon(){
+        return "Oops! Parece que no contamos con un beneficio Club BI valido para tu compra";
+    }
+
+
+    /**
+    * Función para verificar el descuento a ser aplicado
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @return array Array que contiene el codigo de beneficio y el codigo del cupon utilizado
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */ 
+    private function validate_discount(){
         $coupon_posts = get_posts(array(
             'posts_per_page'   => -1,
             'post_type'        => 'shop_coupon',
@@ -173,18 +240,19 @@ class ClubBi {
                )
             )
         ));
-
-        global $woocommerce;
+        
+        $benefit_code = 0;
+        $coupon_code = 0;
         foreach ( $coupon_posts as $coupon_post ) {
             $benefit_code = get_post_meta($coupon_post->ID, 'benefit_code', true );
             $coupon = new WC_Coupon($coupon_post->post_title);
             if($coupon->is_valid()){
-                WC()->cart->apply_coupon( $coupon->code );
+                $coupon_code = $coupon->get_code();
+                break;
             }
         }
         
-        
-
-        wp_die();
+        $response = array("benefit"=>$benefit_code, "coupon"=>$coupon_code);
+        return $response;
     }
 }
