@@ -103,6 +103,7 @@ class ClubBi {
         $settings = ClubBiSettings::get_instance();
         $settings->register_settings();
     }
+    
 
     /**
     * Muestra un nuevo campo al área de cupones de WooCommerce
@@ -157,43 +158,38 @@ class ClubBi {
     */ 
     public function process_card(){
         $card = $_POST['cbi_card'];
-
         if($card === ''){
             echo $this->invalid_card();
         }else{
-            $coupon_keys = $this->validate_discount();
-            if($coupon_keys['coupon'] != 0){
+            $coupon_keys = $this->get_benefidecode();
+            if($coupon_keys['coupon'] != false){
                 include_once dirname(__FILE__) . '/../utils/curl.php';
                 include_once 'discount.php';
-                WC()->cart->apply_coupon( $coupon_keys['coupon'] );
 
                 global $woocommerce;
+                WC()->cart->apply_coupon( $coupon_keys['coupon'] );
                 $subtotal = WC()->cart->subtotal;
                 $currency = 'GTQ';
                 $discount = WC()->cart->get_coupon_discount_amount( $coupon_keys['coupon'] );
-
-                $discount = new Discount($card, $coupon_keys['benefit'], $subtotal, $currency, $discount); //Inicia un descuento
+                $discount = new Discount($card, $coupon_keys['benefit'], $subtotal, $currency, $discount ); 
                 $discount_transaction = $discount->validate(); 
-
-                if ( is_wp_error( $discount_transaction ) ){
+                if ( $discount_transaction['code'] != 200){
                     WC()->cart->remove_coupon( $coupon_keys['coupon'] );
                     wc_clear_notices();
-                    echo $discount_transaction;
-                }else{
-                    if ( $discount->code != 200 ){
+                    echo $this->invalid_card();
+                } else {
+                    if ( $discount->code == 200 ){
+                        echo json_encode($discount_transaction);die();
+                    } else{
                         WC()->cart->remove_coupon( $coupon_keys['coupon'] );
                         wc_clear_notices();
-                        echo $discount_transaction;
-                    } else{
-                        return $coupon_keys;
+                        echo json_encode(array('code' => 400, 'message' => $this->invalid_card()));
                     }
-                } //Valida por error en la llamada del API
-                    
+                } //Valida por error en la llamada del API 
             }else{
-                echo invalid_coupon();
+                echo $this->invalid_card();
             }
         }
-        
         wp_die();
     }
 
@@ -228,31 +224,38 @@ class ClubBi {
     * @link https://codingtipi.com/project/club-bi
     * @since 1.0.0
     */ 
-    private function validate_discount(){
+  
+    private function get_benefidecode(){
+
         $coupon_posts = get_posts(array(
-            'posts_per_page'   => -1,
+            'posts_per_page'   => 1,
             'post_type'        => 'shop_coupon',
             'post_status'      => 'publish',      
-            'meta_query' => array(
-               // meta query takes an array of arrays, watch out for this!
-               array(
-                  'key'     => 'benefit_code'
-               )
-            )
+           'meta_query' => array(
+                    array(
+                        'key' => 'benefit_code',
+                        'value'   => array(''),
+                        'compare' => 'NOT IN'
+                    )
+                )
         ));
-        
+       
         $benefit_code = 0;
         $coupon_code = 0;
+        $coupon_data = array();
         foreach ( $coupon_posts as $coupon_post ) {
-            $benefit_code = get_post_meta($coupon_post->ID, 'benefit_code', true );
-            $coupon = new WC_Coupon($coupon_post->post_title);
-            if($coupon->is_valid()){
-                $coupon_code = $coupon->get_code();
-                break;
-            }
+         $benefit_code = get_post_meta($coupon_post->ID, 'benefit_code', true );
+         $coupon_data = $coupon_post;
         }
-        
+         $coupon = new WC_Coupon($coupon_data->post_title);
+        if($coupon->is_valid()){
+            $coupon_code = $coupon->get_code();
+        } 
         $response = array("benefit"=>$benefit_code, "coupon"=>$coupon_code);
+
         return $response;
     }
+
+    
 }
+
