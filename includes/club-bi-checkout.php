@@ -18,7 +18,9 @@ class ClubBiCheckout{
     * @return string String representando el componente del checkout
     * @since 1.0.0
     */
+ 
     public static function get_checkout_component(){
+     
         $styles = "<style>
         .club_bi {
             background-color: #003865;
@@ -62,20 +64,37 @@ class ClubBiCheckout{
             border-top-left-radius: 1.8rem !important;
             font-weight: 600;
         }
+            .club_bi.disabled {
+        pointer-events: none; 
+        opacity: 0.5; 
+       }
+         .woocommerce-checkout-review-order-table.disabled {
+        pointer-events: none; 
+        opacity: 0.5; 
+       }
+        .loader {
+         display: none;
+        }
+        .loader.show {
+            display: block;
+        }
         </style>";
 
-	    $template = $styles."<div class='club_bi'>
+	    $template = $styles."<div class='club_bi' style='position: static; zoom: 1;'>
             <h1>¿Cuentas con tarjeta <span>Club BI</span>?</h1>
             <p class='form-row form-row-wide'>
                 <label>Número de Tarjeta</label>
                 <input id='cbi_card' type='text' placeholder='0508-5321-8877-1231' class='main_input'></input>
+                 <input id='coupon_status' type='hidden'  class='main_input'></input>
+                 <input id='authorozacion_club_bi' type='hidden' name='authorozacion_club_bi' class='authorozacion_club_bi'></input>
+                 <input id='confirmacion_club_bi' type='hidden' name='confirmacion_club_bi' class='confirmacion_club_bi'></input>
             </p>
             <div class='button_row'>
                 <button type='button' class='validate'>
                     Obtener mi beneficio
                 </button>
             </div>
-        </div>";
+        </div><div class='loader'></div>";
 
         return $template;
     }

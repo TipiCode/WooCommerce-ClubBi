@@ -7,7 +7,7 @@
 * @copyright  2024 - tipi(code)
 * @since      1.0.0
 */ 
-class Discount {
+class cloneDiscount {
     private $provider;
     private $subtotal;
     private $currency;
@@ -49,23 +49,22 @@ class Discount {
                 $this->provider->password,
                 $this->provider->branch
             );// Inicializar Curl
+         
            
             $discount = $this->get_api_model();//Obtiene objeto en formato JSON como lo requiere Club BI
-            // print_r($discount);die();
             
             $response = $curl->execute_post($url, $discount);
-           
+            print_r($response);
+        
             $curl->terminate();
+
             $this->code = $response['code'];
             if($this->code == 200){
-            $data['code'] = $response['code'];
-            $data['authorization'] = $response['body']->authorization;
-            $data['confirmation'] = $response['body']->confirmation;
+            
             }else{
-                $data['code'] = $response['code'];
-                $data['message'] = $response['body']->message;
+                return $response['body']->message;
             }
-            return $data;
+
         } catch (Exception $e) {
 			return new WP_Error('error', $e->getMessage());
 		}
