@@ -19,20 +19,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
-* Añade funcionalidad para compatibilidad con HPO de WooCommerce
-* 
-* @author Luis E. Mendoza <lmendoza@codingtipi.com>
-* @link https://codingtipi.com/project/recurrente
-* @since 1.0.0
-*/
-function club_bi_hpo(){
-    if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
-      \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
-    }
-} 
-add_action('before_woocommerce_init', 'club_bi_hpo');
-
-/**
 * Función encargada de inicializar el plugin de Club BI
 * 
 * @author Luis E. Mendoza <lmendoza@codingtipi.com>
@@ -40,16 +26,36 @@ add_action('before_woocommerce_init', 'club_bi_hpo');
 * @since 1.0.0
 */
 function club_bi_init() {
-    if ( ! class_exists( 'WC_Payment_Gateway' ) ) return;
-    include_once ('classes/club-bi.php') ;
-  
-    ClubBi::get_instance();
-  
+    if (!class_exists('WC_Payment_Gateway')) return;
+    
+    // Incluir archivos solo si no han sido incluidos
+    if (!class_exists('ClubBi')) {
+        include_once('utils/curl.php');         
+        include_once('classes/discount.php');     
+        include_once('classes/club-bi.php');      
+        ClubBi::get_instance();
+    }
 
+    // Incluir el actualizador solo si no existe
+    if (!class_exists('\YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
+        include_once('includes/plugin-update-checker/plugin-update-checker.php');
+        
+        $myUpdateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+            'https://tipi-pod.sfo3.digitaloceanspaces.com/plugins/club-bi/details.json',
+            __FILE__,
+            'woocommerce-club-bi'
+        );
+    }
 }
-add_action( 'plugins_loaded', 'club_bi_init', 0 );
 
+// Cambiamos la prioridad a 20 para asegurarnos que WooCommerce esté cargado
+add_action('plugins_loaded', 'club_bi_init', 20);
 
+// Inicializar el validador de cupones solo una vez
+if (!class_exists('ClubBi_Coupon_Validator')) {
+    require_once plugin_dir_path(__FILE__) . 'includes/club-bi-coupon-validator.php';
+    new ClubBi_Coupon_Validator();
+}
 
 /**
 * Registra los archivos de Javascript para poder manejar el UI
@@ -59,13 +65,37 @@ add_action( 'plugins_loaded', 'club_bi_init', 0 );
 * @since 1.0.0
 */
 function club_bi_script_enqueuer() {
-    wp_register_script( "club_bi", WP_PLUGIN_URL.'/Woocommerce-ClubBi/js/club_bi.js', array('jquery') );
-    wp_localize_script( 'club_bi', 'club_bi_ajax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' )));        
- 
-    wp_enqueue_script( 'jquery' );
-    wp_enqueue_script( 'club_bi' );
+    wp_enqueue_script(
+        'club_bi', 
+        plugins_url('/js/club_bi.js', __FILE__), 
+        array('jquery'),
+        '1.0.0',
+        true
+    );
+    
+    // Obtener el token almacenado
+    $token = get_option('club_bi_token');
+    
+    wp_localize_script(
+        'club_bi', 
+        'club_bi_ajax', 
+        array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'token' => $token // Pasamos el token al JavaScript
+        )
+    );
 }
-add_action( 'init', 'club_bi_script_enqueuer' );
+add_action('wp_enqueue_scripts', 'club_bi_script_enqueuer');
 
+// Para usuarios logueados
+// add_action('wp_ajax_tu_accion_ajax', 'tu_funcion_callback');
+
+// Para usuarios no logueados (si es necesario)
+// add_action('wp_ajax_nopriv_tu_accion_ajax', 'tu_funcion_callback');
+
+// function tu_funcion_callback() {
+//     // Tu código aquí
+//     wp_die(); // Importante terminar la ejecución
+// }
 
 

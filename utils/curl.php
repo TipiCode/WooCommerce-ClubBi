@@ -7,27 +7,22 @@
 * @copyright  2024 - tipi(code)
 * @since      1.0.0
 */ 
-class Curl{
+class Curl {
     private $ch;
     private $header;
 
     /**
     * Constructor
     *
-    * @param string $public_key  Clave pública que provee Recurrente.
-    * @param string $secret_key Clave secreta que provee Recurrente.
-    * 
-    */
-    function __construct($user, $password, $branch) {
+    * @param string $token Token de autenticación de Club BI
+    */ 
+    function __construct($token) {
         $this->ch = curl_init();
-        $this->header  = Array(
-            'X-USER:' . $user,
-            'X-PASSWORD:' . $password,
-            'X-BRANCH:' . $branch,
-            'X-ORIGIN:' . get_site_url('url'),
-            'X-STORE:'.get_bloginfo('name'),
-            'Content-type: application/json'
-          );
+        $this->header = array(
+            'accept: application/json',
+            'Content-Type: application/json',
+            'X-Token: ' . $token
+        );
     }
 
     /**
@@ -40,13 +35,13 @@ class Curl{
     * @link https://codingtipi.com/project/club-bi
     * @since 1.0.0
     */
-    function execute_post($url, $body){
+    function execute_post($url, $body) {
         curl_setopt($this->ch, CURLOPT_URL, $url);
-	    curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
-	    curl_setopt($this->ch, CURLOPT_HTTPHEADER, $this->header );
-	    curl_setopt($this->ch, CURLOPT_POSTFIELDS, json_encode($body));
-	    $response = json_decode(curl_exec($this->ch));
-	    $response_code = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
+        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($this->ch, CURLOPT_HTTPHEADER, $this->header);
+        curl_setopt($this->ch, CURLOPT_POSTFIELDS, json_encode($body));
+        $response = json_decode(curl_exec($this->ch));
+        $response_code = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
 
         return Array(
             "code" => $response_code,
@@ -61,7 +56,7 @@ class Curl{
     * @link https://codingtipi.com/project/club-bi
     * @since 1.0.0
     */
-    function terminate(){
+    function terminate() {
         curl_close($this->ch);
     }
 }

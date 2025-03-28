@@ -15,6 +15,8 @@ class Discount {
     private $cbi_card;
     private $benefit_code;
     public $code;
+    private $authorization;  
+    private $confirmation;  
 
     /**
     * Constructor
@@ -32,38 +34,77 @@ class Discount {
     }
 
     /**
-    * Crea un nuevo DEscuento para ser validado
+    * Crea un nuevo Descuento para ser validado
     * 
     * @throws Exception Si la llamada a club BI falla
     * @author Luis E. Mendoza <lmendoza@codingtipi.com>
-    * @return string HTTP Response Code de la llamada
+    * @return string|true HTTP Response Code de la llamada o true si es exitoso
     * @link https://codingtipi.com/project/club-bi
     * @since 1.0.0
     */
     public function validate(){
+        error_log('Club BI Discount - Iniciando validate()');
         try{
-            $url = 'https://aurora.codingtipi.com/discounts/v1/club-bi/benefits';
-            $curl = new Curl(
-                $this->provider->user, 
-                $this->provider->password,
-                $this->provider->branch
-            );// Inicializar Curl
+            $url = 'https://aurora.codingtipi.com/benefits/v2/club-bi/discounts';
+            
+            // Log inicial
+            error_log('Club BI - Iniciando validación de descuento');
+            
+            // Obtenemos el token
+            $token = get_option('club_bi_token');
+            error_log('Club BI - Token obtenido: ' . ($token ? 'Sí' : 'No'));
+            error_log('Club Bi - ' . $token);
+            
+            if (empty($token)) {
+                error_log('Club BI - Error: Token no encontrado');
+                throw new Exception('Token de autenticación no encontrado');
+            }
 
-            $discount = $this->get_api_model();//Obtiene objeto en formato JSON como lo requiere Club BI
+            // Inicializamos Curl con los headers necesarios
+            $curl = new Curl($token);
+            
+            // El modelo se mantiene igual porque coincide con la documentación
+            $discount = $this->get_api_model();
+            error_log('Club BI - Datos a enviar: ' . json_encode($discount));
 
             $response = $curl->execute_post($url, $discount);
+            error_log('Club BI - Respuesta completa: ' . json_encode($response));
+            
             $curl->terminate();
 
             $this->code = $response['code'];
-            if($this->code == 200){
+
+            // Log del código de respuesta
+            error_log('Club BI - Código de respuesta: ' . $this->code);
+            
+            if($this->code == 200 || $this->code == 201){
+                // Guardar los códigos de autorización y confirmación
+                if (isset($response['body']->authorization)) {
+                    $this->authorization = $response['body']->authorization;
+                }
+                if (isset($response['body']->confirmation)) {
+                    $this->confirmation = $response['body']->confirmation;
+                }
                 
+                // Si tenemos una orden, guardamos la metadata
+                if ($order_id = WC()->session->get('order_awaiting_payment')) {
+                    ClubBi::save_club_bi_metadata(
+                        $order_id,
+                        $this->authorization,
+                        $this->confirmation
+                    );
+                }
+
+                error_log('Club BI Discount - Finalizando validate()');
+                return true;
             }else{
                 return $response['body']->message;
             }
 
         } catch (Exception $e) {
-			return new WP_Error('error', $e->getMessage());
-		}
+            error_log('Club BI Discount - Error en validate(): ' . $e->getMessage());
+            return $e->getMessage();
+        }
     }
 
     /**
@@ -76,11 +117,19 @@ class Discount {
     */ 
     private function get_api_model(){
         return Array(
-            "discount"  => $this->discount,
-            "total"  => $this->subtotal,
-            "currency"  => $this->currency,
-            "code"  => $this->benefit_code,
-            "card"  => $this->cbi_card
+            "discount"  => $this->discount,    // monto del descuento
+            "total"  => $this->subtotal,       // monto total
+            "currency"  => $this->currency,    // GTQ
+            "code"  => $this->benefit_code,    // código del beneficio
+            "card"  => $this->cbi_card        // número de tarjeta
         );
+    }
+
+    public function get_authorization() {
+        return $this->authorization;
+    }
+
+    public function get_confirmation() {
+        return $this->confirmation;
     }
 }
