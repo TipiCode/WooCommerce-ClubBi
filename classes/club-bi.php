@@ -52,7 +52,6 @@ class ClubBi {
 
         }
 
-        error_log('Club BI - Registrando hooks AJAX directamente');
         add_action('wp_ajax_club_bi_redeem', array($this, 'process_card'));
         add_action('wp_ajax_nopriv_club_bi_redeem', array($this, 'process_card'));
         

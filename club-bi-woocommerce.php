@@ -86,16 +86,3 @@ function club_bi_script_enqueuer() {
     );
 }
 add_action('wp_enqueue_scripts', 'club_bi_script_enqueuer');
-
-// Para usuarios logueados
-// add_action('wp_ajax_tu_accion_ajax', 'tu_funcion_callback');
-
-// Para usuarios no logueados (si es necesario)
-// add_action('wp_ajax_nopriv_tu_accion_ajax', 'tu_funcion_callback');
-
-// function tu_funcion_callback() {
-//     // Tu código aquí
-//     wp_die(); // Importante terminar la ejecución
-// }
-
-
