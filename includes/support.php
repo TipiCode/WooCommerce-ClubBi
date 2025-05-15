@@ -18,7 +18,7 @@ class ClubBiSupport {
             "File" => $file,
             "FriendlyMsg" => $error,
             "exception" => $exception,
-            "url" => "oxexpeditions.com",
+            "url" => get_site_url(),
             "version" => CLUB_BI_PLUGIN_VERSION,
         ];
 
