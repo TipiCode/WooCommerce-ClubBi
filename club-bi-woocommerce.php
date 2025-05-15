@@ -13,8 +13,8 @@
 *
 * @package WoocommerceClubBi
 */
-define('PLUGIN_VERSION', '1.1.0');
-define('APP_ID', '8c28f624-6fbc-4dac-bb86-378029cfb158');
+define('CLUB_BI_PLUGIN_VERSION', '1.1.0');
+define('CLUB_BI_APP_ID', '8c28f624-6fbc-4dac-bb86-378029cfb158');
 
 if ( ! defined( 'ABSPATH' ) ) { 
     exit; // No permitir acceder el plugin directamente
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 * Función encargada de inicializar el plugin de Club BI
 * 
 * @author Luis E. Mendoza <lmendoza@codingtipi.com>
-* @link https://codingtipi.com/project/recurrente
+* @link https://codingtipi.com/project/club-bi
 * @since 1.0.0
 */
 function club_bi_init() {
@@ -35,6 +35,7 @@ function club_bi_init() {
         include_once('utils/curl.php');         
         include_once('classes/discount.php');     
         include_once('classes/club-bi.php');      
+        include_once('includes/support.php');      
         ClubBi::get_instance();
     }
 
@@ -63,7 +64,7 @@ if (!class_exists('ClubBi_Coupon_Validator')) {
 * Registra los archivos de Javascript para poder manejar el UI
 * 
 * @author Luis E. Mendoza <lmendoza@codingtipi.com>
-* @link https://codingtipi.com/project/recurrente
+* @link https://codingtipi.com/project/club-bi
 * @since 1.1.0
 */
 function club_bi_script_enqueuer() {
@@ -84,3 +85,17 @@ function club_bi_script_enqueuer() {
     );
 }
 add_action('wp_enqueue_scripts', 'club_bi_script_enqueuer');
+
+/**
+* Añade funcionalidad para compatibilidad con HPO de WooCommerce
+* 
+* @author Luis E. Mendoza <lmendoza@codingtipi.com>
+* @link https://codingtipi.com/project/club-bi
+* @since 1.1.0
+*/
+function club_bi_hpo(){
+  if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+    \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+  }
+} 
+add_action('before_woocommerce_init', 'club_bi_hpo');

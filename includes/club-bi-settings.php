@@ -59,15 +59,18 @@ class ClubBiSettings{
 
         $url = 'https://aurora.codingtipi.com/benefits/v2/club-bi/setup';
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $completeUrl);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($api_data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'accept: application/json',
+            'Content-Type: application/json'
+        ));
         $response = json_decode(curl_exec($ch));
-
         $response_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         // Realizar llamada a la API
         if($response_code != 200){
-            Support::log_error('98', 'club-bi-settings.php', 'Ocurrio un error obteniendo el Token para uso del API.', print_r($response, true));
+            ClubBiSupport::log_error('98', 'club-bi-settings.php', 'Ocurrio un error obteniendo el Token para uso del API.', print_r($response, true));
             add_settings_error(
                 'club_bi_options',
                 'token_error',

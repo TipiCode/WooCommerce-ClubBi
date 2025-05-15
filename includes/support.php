@@ -5,7 +5,7 @@
 * @copyright  2025 - tipi(code)
 * @since      1.1.0
 */ 
-class Support {
+class ClubBiSupport {
     /**
     * Envia el error al API de Aurora
     * 
@@ -19,7 +19,7 @@ class Support {
             "FriendlyMsg" => $error,
             "exception" => $exception,
             "url" => "oxexpeditions.com",
-            "version" => PLUGIN_VERSION,
+            "version" => CLUB_BI_PLUGIN_VERSION,
         ];
 
         $ch = curl_init();
@@ -31,7 +31,7 @@ class Support {
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'accept: application/json',
             'Content-Type: application/json',
-            'X-App-Id: ' . APP_ID
+            'X-App-Id: ' . CLUB_BI_APP_ID
         ));
         curl_exec($ch);
     }

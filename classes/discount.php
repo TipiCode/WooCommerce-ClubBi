@@ -83,7 +83,7 @@ class Discount {
             }
 
         } catch (Exception $e) {
-            Support::log_error('86', 'discount.php', 'Ocurrio un error validando el descuento.', $e->getMessage());
+            ClubBiSupport::log_error('86', 'discount.php', 'Ocurrio un error validando el descuento.', $e->getMessage());
             return $e->getMessage();
         }
     }
