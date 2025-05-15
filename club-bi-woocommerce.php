@@ -3,16 +3,18 @@
 * Plugin Name: Club Bi - WooCommerce
 * Plugin URI: https://github.com/TipiCode/Woocommerce-ClubBi
 * Description: Plugin para Woocommerce que habilita la opción de habilitar descuentos por medio del servicio de Club BI.
-* Version:     1.0.0
+* Version:     1.1.0
 * Requires PHP: 7.4
 * Author:      tipi(code)
 * Author URI: https://codingtipi.com
 * License:     MIT
 * WC requires at least: 7.4.0
-* WC tested up to: 8.7.0
+* WC tested up to: 9.8.5
 *
 * @package WoocommerceClubBi
 */
+define('PLUGIN_VERSION', '1.1.0');
+define('APP_ID', '8c28f624-6fbc-4dac-bb86-378029cfb158');
 
 if ( ! defined( 'ABSPATH' ) ) { 
     exit; // No permitir acceder el plugin directamente
