@@ -64,7 +64,7 @@ if (!class_exists('ClubBi_Coupon_Validator')) {
 * 
 * @author Luis E. Mendoza <lmendoza@codingtipi.com>
 * @link https://codingtipi.com/project/recurrente
-* @since 1.0.0
+* @since 1.1.0
 */
 function club_bi_script_enqueuer() {
     wp_enqueue_script(
@@ -75,15 +75,11 @@ function club_bi_script_enqueuer() {
         true
     );
     
-    // Obtener el token almacenado
-    $token = get_option('club_bi_token');
-    
     wp_localize_script(
         'club_bi', 
         'club_bi_ajax', 
         array(
-            'ajaxurl' => admin_url('admin-ajax.php'),
-            'token' => $token // Pasamos el token al JavaScript
+            'ajaxurl' => admin_url('admin-ajax.php')
         )
     );
 }

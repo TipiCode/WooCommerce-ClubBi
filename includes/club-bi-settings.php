@@ -57,43 +57,25 @@ class ClubBiSettings{
             'branch' => intval($input['branch'])
         );
 
-        error_log('Club BI Setup - Request payload: ' . json_encode($api_data));
+        $url = 'https://aurora.codingtipi.com/benefits/v2/club-bi/setup';
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $completeUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($api_data));
+        $response = json_decode(curl_exec($ch));
 
+        $response_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         // Realizar llamada a la API
-        $response = wp_remote_post('https://aurora.codingtipi.com/benefits/v2/club-bi/setup', array(
-            'headers' => array(
-                'Content-Type' => 'application/json',
-                'Accept: application/json'
-            ),
-            'body' => json_encode($api_data),
-            'timeout' => 30
-        ));
-
-        error_log('Club BI Setup - Response: ' . print_r($response, true));
-
-        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-            $body = json_decode(wp_remote_retrieve_body($response), true);
-            if (isset($body['token'])) {
-                error_log('Club BI Setup - Token received: ' . substr($body['token'], 0, 5) . '...');
-                // Guardar el token en una opción separada
-                update_option('club_bi_token', $body['token']);
-            } else {
-                error_log('Club BI Setup - No token in response');
-                add_settings_error(
-                    'club_bi_options',
-                    'token_error',
-                    'No se recibió el token de autenticación.',
-                    'error'
-                );
-            }
-        } else {
-            error_log('Club BI Setup - API Error: ' . print_r($response, true));
+        if($response_code != 200){
+            Support::log_error('98', 'club-bi-settings.php', 'Ocurrio un error obteniendo el Token para uso del API.', print_r($response, true));
             add_settings_error(
                 'club_bi_options',
-                'api_error',
-                'Error al conectar con el servicio de Club Bi. Por favor, verifica tus credenciales.',
+                'token_error',
+                'No se recibió el token de autenticación.',
                 'error'
             );
+        }else{
+            update_option('club_bi_token', $response->token);
         }
 
         return $input;

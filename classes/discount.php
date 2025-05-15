@@ -43,39 +43,22 @@ class Discount {
     * @since 1.0.0
     */
     public function validate(){
-        error_log('Club BI Discount - Iniciando validate()');
         try{
             $url = 'https://aurora.codingtipi.com/benefits/v2/club-bi/discounts';
             
-            // Log inicial
-            error_log('Club BI - Iniciando validación de descuento');
-            
             // Obtenemos el token
             $token = get_option('club_bi_token');
-            error_log('Club BI - Token obtenido: ' . ($token ? 'Sí' : 'No'));
-            error_log('Club Bi - ' . $token);
-            
-            if (empty($token)) {
-                error_log('Club BI - Error: Token no encontrado');
-                throw new Exception('Token de autenticación no encontrado');
-            }
 
             // Inicializamos Curl con los headers necesarios
-            $curl = new Curl($token);
+            $curl = new ClubBICurl($token);
             
             // El modelo se mantiene igual porque coincide con la documentación
             $discount = $this->get_api_model();
-            error_log('Club BI - Datos a enviar: ' . json_encode($discount));
 
             $response = $curl->execute_post($url, $discount);
-            error_log('Club BI - Respuesta completa: ' . json_encode($response));
-            
             $curl->terminate();
 
             $this->code = $response['code'];
-
-            // Log del código de respuesta
-            error_log('Club BI - Código de respuesta: ' . $this->code);
             
             if($this->code == 200 || $this->code == 201){
                 // Guardar los códigos de autorización y confirmación
@@ -94,15 +77,13 @@ class Discount {
                         $this->confirmation
                     );
                 }
-
-                error_log('Club BI Discount - Finalizando validate()');
                 return true;
             }else{
                 return $response['body']->message;
             }
 
         } catch (Exception $e) {
-            error_log('Club BI Discount - Error en validate(): ' . $e->getMessage());
+            Support::log_error('86', 'discount.php', 'Ocurrio un error validando el descuento.', $e->getMessage());
             return $e->getMessage();
         }
     }
@@ -125,10 +106,26 @@ class Discount {
         );
     }
 
+    /**
+    * Obtiene la autorización del descuento
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @return String Código de autorización
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */ 
     public function get_authorization() {
         return $this->authorization;
     }
 
+    /**
+    * Obtiene la confirmación del descuento
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @return String Código de confirmación
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */ 
     public function get_confirmation() {
         return $this->confirmation;
     }

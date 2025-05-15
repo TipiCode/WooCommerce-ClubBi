@@ -7,7 +7,7 @@
 * @copyright  2024 - tipi(code)
 * @since      1.0.0
 */ 
-class Curl {
+class ClubBICurl {
     private $ch;
     private $header;
 

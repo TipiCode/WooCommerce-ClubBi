@@ -4,10 +4,9 @@
 *
 * Esta clase es la principal para interactuar con la validación de la tarjeta Club BI.
 *
-* @copyright  2024 - tipi(code)
+* @copyright  2025 - tipi(code)
 * @since      1.0.0
 */ 
-
 class ClubBi {
     public $branch;
     public $user;
@@ -44,7 +43,11 @@ class ClubBi {
     }
 
     /**
-    * Nueva función de inicialización
+    * Inicializa la clase de ClubBi
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.1.0
     */ 
     private function init() {
         // Movemos el registro de acciones AJAX fuera del hook de WooCommerce
@@ -181,20 +184,10 @@ class ClubBi {
     */
     public function process_card() {
         try {
-            error_log('Club BI - Iniciando process_card');
-            
-            // Verificar si los datos POST están llegando
-            error_log('Club BI - Datos POST recibidos: ' . print_r($_POST, true));
-            
-            $card = sanitize_text_field($_POST['cbi_card']);
-            error_log('Club BI - Tarjeta recibida: ' . $card);
-            
+            $card = sanitize_text_field($_POST['cbi_card']);    
             $total = WC()->cart->get_total('edit');
-            error_log('Club BI - Total del carrito: ' . $total);
-            
             // Obtener cupón con código de beneficio
             $coupon_data = $this->get_valid_coupon();
-            error_log('Club BI - Datos del cupón: ' . print_r($coupon_data, true));
             
             if(empty($coupon_data['benefit']) || empty($coupon_data['coupon'])) {
                 wp_send_json_error($this->invalid_coupon(), 400);
@@ -205,7 +198,6 @@ class ClubBi {
             $coupon = new WC_Coupon($coupon_data['coupon']);
             $discount_amount = $coupon->get_amount();
             
-            error_log('Club BI - Antes de crear instancia de Discount');
             // Crear instancia de Discount
             $discount = new Discount(
                 $card,
@@ -214,12 +206,9 @@ class ClubBi {
                 'GTQ',
                 $discount_amount
             );
-            error_log('Club BI - Después de crear instancia de Discount');
             
             // Validar el descuento usando la función validate() de la clase Discount
-            error_log('Club BI - Antes de validate()');
             $result = $discount->validate();
-            error_log('Club BI - Después de validate() - Resultado: ' . ($result === true ? 'true' : $result));
             
             if ($result === true) {
                 $this->save_validation_to_session($coupon_data, $discount);
@@ -230,14 +219,19 @@ class ClubBi {
             }
             
         } catch (Exception $e) {
-            error_log('Club BI - Error en process_card: ' . $e->getMessage());
             wp_send_json_error($e->getMessage(), 400);
         }
     }
 
+    /**
+    * Guarda el cupon en la sesión
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */
     private function save_validation_to_session($coupon_data, Discount $discount) {
         if (!isset($coupon_data['coupon'])) {
-            error_log('Club BI - Error: Datos de cupón inválidos');
             return;
         }
 
@@ -248,13 +242,16 @@ class ClubBi {
             'benefit_code' => $coupon_data['benefit']
         ];
         WC()->session->set('clubbi_validated_coupons', $validated_coupons);
-        
-        error_log('Club BI - Información guardada en sesión: ' . print_r($validated_coupons, true));
     }
 
+    /**
+    * Obtiene cupones validos
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */ 
     private function get_valid_coupon() {
-        error_log('Club BI - Iniciando get_valid_coupon()');
-        
         $coupon_posts = $this->get_benefit_coupons();
         foreach ($coupon_posts as $coupon_post) {
             $coupon_data = $this->validate_coupon_post($coupon_post);
@@ -266,6 +263,13 @@ class ClubBi {
         return ['benefit' => 0, 'coupon' => 0];
     }
 
+    /**
+    * Obtiene los cupones con codigo de beneficio
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */ 
     private function get_benefit_coupons() {
         return get_posts([
             'posts_per_page' => -1,
@@ -277,6 +281,13 @@ class ClubBi {
         ]);
     }
 
+    /**
+    * Determina el cupon a ser utilizado
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */ 
     private function validate_coupon_post($coupon_post) {
         $benefit_code = get_post_meta($coupon_post->ID, 'benefit_code', true);
         
@@ -296,6 +307,13 @@ class ClubBi {
         return null;
     }
 
+    /**
+    * Función para determinar si el cupon es valido
+    * 
+    * @author Luis E. Mendoza <lmendoza@codingtipi.com>
+    * @link https://codingtipi.com/project/club-bi
+    * @since 1.0.0
+    */ 
     private function is_coupon_valid($coupon) {
         return $coupon->get_status() === 'publish' && 
                (!$coupon->get_date_expires() || $coupon->get_date_expires()->getTimestamp() > time()) &&

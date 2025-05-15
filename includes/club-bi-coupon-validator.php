@@ -31,7 +31,6 @@ class ClubBi_Coupon_Validator {
         add_filter('woocommerce_coupon_is_valid', array($this, 'validate_clubbi_coupon'), 10, 2);
         add_filter('woocommerce_coupon_is_valid_for_product', array($this, 'validate_clubbi_coupon_for_product'), 10, 4);
         add_filter('woocommerce_coupon_error', array($this, 'prevent_manual_coupon_usage'), 10, 3);
-        error_log('Club BI - Coupon Validator initialized');
     }
     
     /**
@@ -44,9 +43,6 @@ class ClubBi_Coupon_Validator {
     * @since 1.0.0
     */
     public function validate_clubbi_coupon($valid, $coupon) {
-        error_log('Club BI - Validating coupon: ' . $coupon->get_code());
-        error_log('Club BI - Initial validation state: ' . ($valid ? 'true' : 'false'));
-        
         return $this->validate_clubbi_benefits($valid, $coupon);
     }
     
@@ -62,8 +58,6 @@ class ClubBi_Coupon_Validator {
     * @since 1.0.0
     */
     public function validate_clubbi_coupon_for_product($valid, $product, $coupon, $values) {
-        error_log('Club BI - Validating coupon for product');
-        
         return $this->validate_clubbi_benefits($valid, $coupon);
     }
     
@@ -78,30 +72,22 @@ class ClubBi_Coupon_Validator {
     */
     private function validate_clubbi_benefits($valid, $coupon) {
         $coupon_code = $coupon->get_code();
-        error_log('Club BI - Starting validate_clubbi_benefits for coupon: ' . $coupon_code);
         
         if ($this->has_validation($coupon_code)) {
             $validation_result = $this->get_validation_result($coupon_code);
-            error_log('Club BI - Using cached validation result: ' . ($validation_result ? 'true' : 'false'));
             return $validation_result;
         }
         
         $benefit_code = $coupon->get_meta('benefit_code');
-        error_log('Club BI - Benefit code: ' . ($benefit_code ? $benefit_code : 'not found'));
-        
         if (!empty($benefit_code)) {
             $validation_data = $this->get_api_validation($coupon_code);
-            error_log('Club BI - API validation data: ' . print_r($validation_data, true));
             
             if (!$validation_data || empty($validation_data['authorization'])) {
-                error_log('Club BI - Validation failed - No authorization found');
                 $this->set_validation_result($coupon_code, false);
                 return false;
             }
-            error_log('Club BI - Validation successful - Authorization found');
         }
         
-        error_log('Club BI - Final validation result: ' . ($valid ? 'true' : 'false'));
         $this->set_validation_result($coupon_code, $valid);
         return $valid;
     }
@@ -115,19 +101,12 @@ class ClubBi_Coupon_Validator {
     * @since 1.0.0
     */
     private function get_api_validation($coupon_code) {
-        error_log('Club BI - get_api_validation() - Iniciando para cupón: ' . $coupon_code);
-        
         if (!WC()->session) {
-            error_log('Club BI - No session found');
             return false;
         }
         
-        error_log('Club BI - Session ID: ' . WC()->session->get_session_cookie());
         $validated_coupons = WC()->session->get('clubbi_validated_coupons', array());
-        error_log('Club BI - Contenido completo de session clubbi_validated_coupons: ' . print_r($validated_coupons, true));
-        
         $result = isset($validated_coupons[$coupon_code]) ? $validated_coupons[$coupon_code] : false;
-        error_log('Club BI - Resultado de validación para ' . $coupon_code . ': ' . print_r($result, true));
         
         return $result;
     }
@@ -152,14 +131,33 @@ class ClubBi_Coupon_Validator {
         return $err;
     }
 
+    /**
+    * Valida el código de cupon
+    * 
+    * @author Franco A. Cabrera <francocabreradev@gmail.com>
+    * @return bool Cupon validado
+    * @since 1.0.0
+    */
     private function has_validation($coupon_code) {
         return isset($this->validated_coupons[$coupon_code]);
     }
 
+    /**
+    * Obtiene la validación del código de cupon
+    * 
+    * @author Franco A. Cabrera <francocabreradev@gmail.com>
+    * @since 1.0.0
+    */
     private function get_validation_result($coupon_code) {
         return $this->validated_coupons[$coupon_code] ?? false;
     }
 
+    /**
+    * Guarda la validación del código de cupon
+    * 
+    * @author Franco A. Cabrera <francocabreradev@gmail.com>
+    * @since 1.0.0
+    */
     private function set_validation_result($coupon_code, $result) {
         $this->validated_coupons[$coupon_code] = $result;
     }

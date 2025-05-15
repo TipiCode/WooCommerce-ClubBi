@@ -1,14 +1,10 @@
 jQuery(document).ready(function ($) {
     console.log('Club BI JS initialized');
-    
     $(document).on('click', '.validate', function (e) {
         e.preventDefault();
-        
         const $button = $(this);
         const $loader = $('#club_bi_loader');
         const cardNumber = $('#cbi_card').val();
-        
-        console.log('Club BI - Enviando número de tarjeta:', cardNumber);
         
         $button.prop('disabled', true);
         $loader.show();
@@ -35,7 +31,6 @@ jQuery(document).ready(function ($) {
                 console.log('Club BI - Error:', error);
                 console.log('Club BI - Response Text:', xhr.responseText);
                 console.log('Club BI - Status Code:', xhr.status);
-                console.log('Club BI - X-Token:', xhr.getResponseHeader('X-Token'));
                 
                 let errorMessage = 'Error desconocido';
                 try {
